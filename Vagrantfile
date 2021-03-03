@@ -5,20 +5,40 @@ nodes_per_type = 3
 
 vms = {
   'manager' => {
-			'memory' => '1024', 
-			'cpus' => 2,
-			'ip' => 0, 
-			'box' => 'geerlingguy/debian10', 
-			'provision' => 'manager.sh'
-			},
-   'woker-node' => {
-      'memory' => '1024',
-      'cpus' => 2,
-      'ip' => 50,
-      'box' => 'geerlingguy/debian10',
-      'provision' => 'worker-node.sh'		
-	}
+    'memory' => '1024', 
+	'cpus' => 2,
+	'ip' => 0, 
+	'box' => 'geerlingguy/debian10', 
+	'provision' => 'manager.sh'
+  },
+  'woker-node' => {
+    'memory' => '1024',
+    'cpus' => 2,
+    'ip' => 50,
+    'box' => 'geerlingguy/debian10',
+    'provision' => 'worker-node.sh'		
+  },
 }
+
+other_vms = {
+
+  'load-balancer' => {
+    'memory' => '512',
+	'cpus' => 1,
+    'ip' => 100,
+    'box' => 'geerlingguy/debian10',
+    'provision' => 'haproxy.sh'
+
+  },
+  'traefik' => {
+    'memory' => '512',
+	'cpus' => 1,
+	'ip' => 200,
+	'box' => 'geerlingguy/debian10',
+	'provision' => 'worker-node.sh'
+
+  }
+} 
 
 Vagrant.configure('2') do |config|
 
@@ -38,6 +58,20 @@ Vagrant.configure('2') do |config|
 		 vb.cpus = conf['cpus']
 		end
       end
+    end
+  end
+
+  other_vms.each do |name, conf|
+    config.vm.define "#{name}" do |my|
+      my.vm.box = conf['box']
+      my.vm.hostname = "#{name}"
+      my.vm.network 'private_network', ip: "172.20.12.#{conf['ip']}"
+      my.vm.provision 'shell', path: "provision/#{conf['provision']}"
+      my.vm.provider 'virtualbox' do |vb|
+        vb.memory = conf['memory']
+        vb.name = "k8s_#{name}"
+        vb.cpus = conf['cpus']
+	  end
     end
   end
 end
