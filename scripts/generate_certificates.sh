@@ -9,7 +9,7 @@ mkdir -p certs
 openssl	genrsa -out certs/kubernetes-ca.key 4096
 
 #1.3 create auto signed certificate
-openssl req -new -x509 -days 365 -key certs/kubernetes-ca.key -out certs/kubernetes-ca.crt
+openssl req -new -x509 -days 365 -key certs/kubernetes-ca.key -out certs/kubernetes-ca.crt -config ssl_config/ssl.conf
 
 #2: generate admin client certificate
 
@@ -23,10 +23,11 @@ openssl req \
   -sha256 \
   -subj "/C=US/ST=None/L=None/O=system:masters/CN=kubernetes-admin" \
   -key certs/admin.key \
-  -out certs/admin.csr
+  -out certs/admin.csr \
+  -config ssl_config/ssl.conf
 
 #2.3 sign admin certificate
-openssl x509 -req -days 365 -sha256 -CA certs/kubernetes-ca.crt -CAkey certs/kubernetes-ca.key -set_serial 01 -extensions req_ext -in certs/admin.csr -out certs/admin.crt
+openssl x509 -req -days 365 -sha256 -CA certs/kubernetes-ca.crt -CAkey certs/kubernetes-ca.key -set_serial 01 -extensions req_ext -in certs/admin.csr -out certs/admin.crt -extfile ssl_config/ssl.conf
 
 
 #3: generate worker certificates
@@ -45,7 +46,8 @@ for worker in worker-01 worker-02 worker-03; do
    -sha256 \
    -subj "/C=BR/ST/L=None/O=system:nodes/CN=kube-node" \
    -key certs/$worker.key \
-   -out certs/$worker.csr;
+   -out certs/$worker.csr \
+   -config ssl_config/ssl.conf
 
 done
   	
@@ -54,7 +56,7 @@ done
 for worker in worker-01 worker-02 worker-03; do
   openssl x509 -req \
     -days 365 \
-	-extfile <(printf "subjectAltName=$worker,172.20.10.$ip") \
+	-extfile ssl_config/$worker-ssl.conf \
     -sha256 \
     -CA certs/kubernetes-ca.crt \
     -CAkey certs/kubernetes-ca.key \
