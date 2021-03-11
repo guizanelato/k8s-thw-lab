@@ -92,7 +92,7 @@ openssl x509 \
   -set_serial 01 \
   -extensions req_ext \
   -in certs/kube-controller-manager.csr \
-  -out certs/kube-controler-manager.crt
+  -out certs/kube-controller-manager.crt
 
 #5.1: generate kube proxy private key
 openssl genrsa -out certs/kube-proxy.key 4096
