@@ -152,14 +152,24 @@ openssl req \
   -new \
   -nodes \
   -sha256 \
-  -subj "/C=BR/ST=None/L=None/O=None/CN=system:kube-apiserver" \
+  -subj "/CN=system:kube-apiserver" \
   -key certs/kube-apiserver.key \
-  -out certs/kube-apiserver.csr
+  -out certs/kube-apiserver.csr \
+  -config ssl_config/kube-apiserver-ssl.conf
 
 
 #7.3 sign kube-apiserver certificate
-openssl x509 -req -days 365  -extfile <(printf "subjectAltName=IP:10.1.0.1,IP:127.0.0.1,DNS:kubernetes.default.svc.cluster.local,DNS:kube-apiserver,DNS:localhost") -sha256 -CA certs/kubernetes-ca.crt -CAkey certs/kubernetes-ca.key -set_serial 01 -in certs/kube-apiserver.csr -out certs/kube-apiserver.crt
-
+openssl x509 \
+	   	-req \
+	   	-days 365 \
+	  	-extfile ssl_config/kube-apiserver-ssl.conf \
+	   	-extensions v3_req \
+		-sha256 \
+	   	-CA certs/kubernetes-ca.crt \
+	   	-CAkey certs/kubernetes-ca.key \
+	   	-set_serial 01 \
+	   	-in certs/kube-apiserver.csr \
+	   	-out certs/kube-apiserver.crt
 
 
 #8.1: generate service account private key
@@ -186,4 +196,27 @@ openssl x509 \
   -out certs/service-account.crt
   
 
+#9.1: generate etcd private key
+openssl genrsa -out certs/etcd.key 4096
 
+#9.2: generate certificate sign request
+openssl req \
+  -new \
+  -nodes \
+  -sha256 \
+  -subj "/CN=etcd-server" \
+  -key certs/etcd.key \
+  -out certs/etcd.csr \
+  -config  ssl_config/etcd-ssl.conf
+
+#9.3: sign etcd certificate 
+openssl x509 \
+  -req \
+  -days 365 \
+  -CA certs/kubernetes-ca.crt \
+  -CAkey certs/kubernetes-ca.key \
+  -set_serial 01 \
+  -extensions v3_req \
+  -extfile ssl_config/etcd-ssl.conf \
+  -in certs/etcd.csr \
+  -out certs/etcd.crt 
