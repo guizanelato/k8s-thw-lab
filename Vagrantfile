@@ -11,7 +11,7 @@ vms = {
 	'box' => 'geerlingguy/debian10', 
 	'provision' => 'manager.sh'
   },
-  'woker-node' => {
+  'worker' => {
     'memory' => '1024',
     'cpus' => 2,
     'ip' => 50,
@@ -43,7 +43,7 @@ other_vms = {
 Vagrant.configure('2') do |config|
 
   config.vm.box_check_update = false
-  config.vm.provision "file", source: "./provision/scripts", destination:"/home/vagrant/scripts"
+ # config.vm.provision "file", source: "./provision/scripts", destination:"/home/vagrant/scripts"
   
   (1..nodes_per_type).each do |i|
     vms.each do |name, conf|
@@ -51,7 +51,7 @@ Vagrant.configure('2') do |config|
         my.vm.box = conf['box']
         my.vm.hostname = "#{name}-0#{i}"
         my.vm.network 'private_network', ip: "172.20.12.#{conf['ip'] + (10 * i)}"
-        my.vm.provision 'shell', path: "provision/#{conf['provision']}"
+      # my.vm.provision 'shell', path: "provision/#{conf['provision']}"
 		my.vm.provider 'virtualbox' do |vb|
 		 vb.memory = conf['memory']
 		 vb.name = "k8s_#{name}_0#{i}"
@@ -66,7 +66,7 @@ Vagrant.configure('2') do |config|
       my.vm.box = conf['box']
       my.vm.hostname = "#{name}"
       my.vm.network 'private_network', ip: "172.20.12.#{conf['ip']}"
-      my.vm.provision 'shell', path: "provision/#{conf['provision']}"
+     # my.vm.provision 'shell', path: "provision/#{conf['provision']}"
       my.vm.provider 'virtualbox' do |vb|
         vb.memory = conf['memory']
         vb.name = "k8s_#{name}"
